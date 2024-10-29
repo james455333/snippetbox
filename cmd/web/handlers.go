@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"path/filepath"
 	appConfig "snippetbox.james455333.github.com/cmd/web/config"
@@ -58,15 +57,13 @@ func HomeGet(app *appConfig.Application) http.HandlerFunc {
 
 		homeTemplate, err := template.ParseFiles(files...)
 		if err != nil {
-			app.Logger.Error(err.Error(), slog.String("method", request.Method), slog.String("uri", request.URL.RequestURI()))
-			http.Error(writer, "Internal Sever Error", http.StatusInternalServerError)
+			app.ServerError(writer, request, err)
 			return
 		}
 
 		err = homeTemplate.ExecuteTemplate(writer, "base", nil)
 		if err != nil {
-			app.Logger.Error(err.Error(), slog.String("method", request.Method), slog.String("uri", request.URL.RequestURI()))
-			http.Error(writer, "Internal Sever Error", http.StatusInternalServerError)
+			app.ServerError(writer, request, err)
 			return
 		}
 	}
