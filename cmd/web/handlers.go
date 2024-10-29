@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"text/template"
 )
 
@@ -58,5 +59,22 @@ func HomeGet(writer http.ResponseWriter, request *http.Request) {
 
 func staticSubTreeGet(url, staticSrcRootPath string) http.Handler {
 	fileServer := http.FileServer(http.Dir(staticSrcRootPath))
-	return http.StripPrefix(url, fileServer)
+	neuterHandler := neuter(fileServer)
+	return http.StripPrefix(url, neuterHandler)
+}
+
+func neuter(fileServer http.Handler) http.Handler {
+	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if strings.HasSuffix(request.URL.Path, "/") {
+			log.Println("deny directory travel")
+			http.NotFound(writer, request)
+			return
+		}
+		fileServer.ServeHTTP(writer, request)
+	})
+}
+
+type T struct {
+	Name    string `json:"name"`
+	IamLong string
 }
