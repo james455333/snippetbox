@@ -5,17 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"path/filepath"
-	appConfig "snippetbox.james455333.github.com/cmd/web/config"
 	"strconv"
 	"text/template"
 )
 
 type neuteredFileSystem struct {
 	fs  http.FileSystem
-	app *appConfig.Application
+	app *Application
 }
 
-func snippetCreatePost(app *appConfig.Application) http.HandlerFunc {
+func snippetCreatePost(app *Application) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Add("Content-Type", "Application/json; charset=utf-8")
 		writer.WriteHeader(http.StatusCreated)
@@ -23,13 +22,13 @@ func snippetCreatePost(app *appConfig.Application) http.HandlerFunc {
 	}
 }
 
-func snippetCreateGet(app *appConfig.Application) http.HandlerFunc {
+func snippetCreateGet(app *Application) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Write([]byte("Display snippet create"))
 	}
 }
 
-func snippetViewGet(app *appConfig.Application) http.HandlerFunc {
+func snippetViewGet(app *Application) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		id, err := strconv.Atoi(request.PathValue("id"))
 		if err != nil && errors.Is(err, strconv.ErrSyntax) {
@@ -45,7 +44,7 @@ func snippetViewGet(app *appConfig.Application) http.HandlerFunc {
 	}
 }
 
-func HomeGet(app *appConfig.Application) http.HandlerFunc {
+func HomeGet(app *Application) http.HandlerFunc {
 	return func(writer http.ResponseWriter, request *http.Request) {
 		writer.Header().Add("Server", "Go")
 
@@ -69,7 +68,7 @@ func HomeGet(app *appConfig.Application) http.HandlerFunc {
 	}
 }
 
-func staticSubTreeGet(url, staticSrcRootPath string, app *appConfig.Application) http.Handler {
+func staticSubTreeGet(url, staticSrcRootPath string, app *Application) http.Handler {
 	fileServer := http.FileServer(neuteredFileSystem{http.Dir(staticSrcRootPath), app})
 	return http.StripPrefix(url, fileServer)
 }

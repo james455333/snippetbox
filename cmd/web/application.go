@@ -1,4 +1,4 @@
-package config
+package main
 
 import (
 	"log/slog"
@@ -8,6 +8,7 @@ import (
 
 type Application struct {
 	Logger *slog.Logger
+	Cfg    *Config
 }
 
 // The ServerError helper writes a log entry at Error level (including the request
