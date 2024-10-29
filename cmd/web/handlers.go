@@ -5,10 +5,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
-	"strings"
 	"text/template"
 )
+
+type neuteredFileSystem struct {
+	fs http.FileSystem
+}
 
 func snippetCreatePost(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Add("Content-Type", "application/json; charset=utf-8")
@@ -58,23 +62,37 @@ func HomeGet(writer http.ResponseWriter, request *http.Request) {
 }
 
 func staticSubTreeGet(url, staticSrcRootPath string) http.Handler {
-	fileServer := http.FileServer(http.Dir(staticSrcRootPath))
-	neuterHandler := neuter(fileServer)
-	return http.StripPrefix(url, neuterHandler)
+	fileServer := http.FileServer(neuteredFileSystem{http.Dir(staticSrcRootPath)})
+	return http.StripPrefix(url, fileServer)
 }
 
-func neuter(fileServer http.Handler) http.Handler {
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		if strings.HasSuffix(request.URL.Path, "/") {
-			log.Println("deny directory travel")
-			http.NotFound(writer, request)
-			return
+func (neuteredFileSystem neuteredFileSystem) Open(path string) (http.File, error) {
+	log.Printf("neuteredFileSystem Open start on : %s", path)
+	file, err := neuteredFileSystem.fs.Open(path)
+	if err != nil {
+		log.Println("error :", err.Error())
+		return nil, err
+	}
+
+	stat, err := file.Stat()
+	if err != nil {
+		log.Println("error", err.Error())
+		return nil, err
+	}
+
+	if stat.IsDir() {
+		index := filepath.Join(path, "index.html")
+		if _, err := neuteredFileSystem.fs.Open(index); err != nil {
+			closeErr := file.Close()
+			if closeErr != nil {
+				log.Println("error :", closeErr.Error())
+				return nil, closeErr
+			}
+			log.Println("error :", err.Error())
+			return nil, err
 		}
-		fileServer.ServeHTTP(writer, request)
-	})
-}
+	}
 
-type T struct {
-	Name    string `json:"name"`
-	IamLong string
+	log.Println("find file:", stat.Name())
+	return file, nil
 }
