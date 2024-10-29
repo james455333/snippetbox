@@ -6,11 +6,11 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	appConfig "snippetbox.james455333.github.com/cmd/web/config"
 )
 
 var (
 	StaticSrcRootPath string = "./ui/static/"
-	logger            slog.Logger
 )
 
 type config struct {
@@ -37,12 +37,13 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.Handle("GET /static/", staticSubTreeGet("/static", cfg.staticSrcDir))
+	app := &appConfig.Application{Logger: logger}
+	mux.Handle("GET /static/", staticSubTreeGet("/static", cfg.staticSrcDir, app))
 
-	mux.HandleFunc("GET /{$}", HomeGet)
-	mux.HandleFunc("GET /snippet/view/{id}", snippetViewGet)
-	mux.HandleFunc("GET /snippet/create", snippetCreateGet)
-	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
+	mux.HandleFunc("GET /{$}", HomeGet(app))
+	mux.HandleFunc("GET /snippet/view/{id}", snippetViewGet(app))
+	mux.HandleFunc("GET /snippet/create", snippetCreateGet(app))
+	mux.HandleFunc("POST /snippet/create", snippetCreatePost(app))
 
 	logger.Info("starting server on ", slog.String("addr", cfg.addr))
 	logger.Info(fmt.Sprint(cfg))
