@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -28,11 +27,11 @@ func snippetViewGet(writer http.ResponseWriter, request *http.Request) {
 	id, err := strconv.Atoi(request.PathValue("id"))
 	if err != nil && errors.Is(err, strconv.ErrSyntax) {
 		writer.WriteHeader(http.StatusBadRequest)
-		log.Printf("invalid syntax with : %s", request.PathValue("id"))
+		logger.Error(fmt.Sprintf("invalid syntax with : %s", request.PathValue("id")))
 		return
 	} else if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		log.Printf("invalid syntax with : %s", request.PathValue("id"))
+		logger.Error(fmt.Sprintf("invalid syntax with : %s", request.PathValue("id")))
 		return
 	}
 	msg := fmt.Sprintf("Display a snippet view ID: %d", id)
@@ -50,13 +49,13 @@ func HomeGet(writer http.ResponseWriter, request *http.Request) {
 
 	homeTemplate, err := template.ParseFiles(files...)
 	if err != nil {
-		log.Println(err.Error())
+		logger.Error(err.Error())
 		http.Error(writer, "Internal Sever Error", http.StatusInternalServerError)
 	}
 
 	err = homeTemplate.ExecuteTemplate(writer, "base", nil)
 	if err != nil {
-		log.Println(err.Error())
+		logger.Error(err.Error())
 		http.Error(writer, "Internal Sever Error", http.StatusInternalServerError)
 	}
 }
@@ -67,16 +66,16 @@ func staticSubTreeGet(url, staticSrcRootPath string) http.Handler {
 }
 
 func (neuteredFileSystem neuteredFileSystem) Open(path string) (http.File, error) {
-	log.Printf("neuteredFileSystem Open start on : %s", path)
+	logger.Info(fmt.Sprintf("neuteredFileSystem Open start on : %s", path))
 	file, err := neuteredFileSystem.fs.Open(path)
 	if err != nil {
-		log.Println("error :", err.Error())
+		logger.Error(err.Error())
 		return nil, err
 	}
 
 	stat, err := file.Stat()
 	if err != nil {
-		log.Println("error", err.Error())
+		logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -85,14 +84,14 @@ func (neuteredFileSystem neuteredFileSystem) Open(path string) (http.File, error
 		if _, err := neuteredFileSystem.fs.Open(index); err != nil {
 			closeErr := file.Close()
 			if closeErr != nil {
-				log.Println("error :", closeErr.Error())
+				logger.Error(closeErr.Error())
 				return nil, closeErr
 			}
-			log.Println("error :", err.Error())
+			logger.Error(err.Error())
 			return nil, err
 		}
 	}
 
-	log.Println("find file:", stat.Name())
+	logger.Info(fmt.Sprintf("find file: %s", stat.Name()))
 	return file, nil
 }

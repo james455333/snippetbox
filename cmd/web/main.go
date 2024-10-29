@@ -3,12 +3,14 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"net/http"
+	"os"
 )
 
 var (
 	StaticSrcRootPath string = "./ui/static/"
+	logger            slog.Logger
 )
 
 type config struct {
@@ -27,8 +29,11 @@ func main() {
 	flag.BoolVar(&cfg.flag1, "flag1", true, "test boolean flag")
 	flag.Parse()
 
-	//fmt.Printf("boolFlag1 : %b\n", *boolFlag1)
-	fmt.Printf("boolFlag1 : %b\n", &cfg.flag1)
+	loggerHandler := slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level:     slog.LevelDebug,
+		AddSource: true,
+	})
+	logger := slog.New(loggerHandler)
 
 	mux := http.NewServeMux()
 
@@ -39,8 +44,11 @@ func main() {
 	mux.HandleFunc("GET /snippet/create", snippetCreateGet)
 	mux.HandleFunc("POST /snippet/create", snippetCreatePost)
 
-	log.Print("starting server on ", cfg.addr)
-	log.Print(cfg)
+	logger.Info("starting server on ", slog.String("addr", cfg.addr))
+	logger.Info(fmt.Sprint(cfg))
 	err := http.ListenAndServe(cfg.addr, mux)
-	log.Fatal(err)
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 }
