@@ -36,7 +36,8 @@ func main() {
 		Logger: logger,
 		Cfg:    cfg,
 		snippets: &models.SnippetModel{
-			DB: db,
+			DB:     db,
+			Logger: logger,
 		},
 	}
 
