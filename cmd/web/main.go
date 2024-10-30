@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"snippetbox.james455333.github.com/internal/models"
 
 	_ "github.com/lib/pq"
 )
@@ -34,6 +35,9 @@ func main() {
 	app := &Application{
 		Logger: logger,
 		Cfg:    cfg,
+		snippets: &models.SnippetModel{
+			DB: db,
+		},
 	}
 
 	logger.Info("starting server on ", slog.String("addr", cfg.addr))

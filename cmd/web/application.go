@@ -4,11 +4,13 @@ import (
 	"log/slog"
 	"net/http"
 	"runtime/debug"
+	"snippetbox.james455333.github.com/internal/models"
 )
 
 type Application struct {
-	Logger *slog.Logger
-	Cfg    *Config
+	Logger   *slog.Logger
+	Cfg      *Config
+	snippets *models.SnippetModel
 }
 
 // The ServerError helper writes a log entry at Error level (including the request
